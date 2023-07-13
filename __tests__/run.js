@@ -14,7 +14,8 @@ const tests = [
     require('./block-test.js'),
     require('./empty-statement-test.js'),
     require('./math-test.js'),
-    require('./assignment-test.js')
+    require('./assignment-test.js'),
+    require('./variable-test.js')
 ]
 
 const parser = new Parser()
@@ -24,9 +25,11 @@ const parser = new Parser()
  */
 function exec() {
     const program = `
-
-        x = y + 2;
-
+        let y;
+        let a, b;
+        let c, b = 10;
+        let x = y + 2;
+        a = 2;
     `
     const ast = parser.parse(program)
 

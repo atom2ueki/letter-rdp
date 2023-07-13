@@ -35,6 +35,21 @@ const DefaultFactory = {
         }
     },
 
+    VariableStatement(declarations) {
+        return {
+            type: 'VariableStatement',
+            declarations: declarations
+        }
+    },
+
+    VariableDeclarator(id, init) {
+        return {
+            type: 'VariableDeclarator',
+            id: id,
+            init: init
+        }
+    },
+
     StringLiteral(value) {
         return {
             type: 'StringLiteral',
@@ -140,6 +155,8 @@ class Parser {
             return this.EmptyStatement()
         case '{': 
             return this.BlockStatement()
+        case 'let':
+            return this.VariableStatement()
         default:
             return this.ExpressionStatement()
         }
@@ -328,6 +345,56 @@ class Parser {
         this._eat('}')
 
         return factory.BlockStatement(body)
+    }
+
+    /**
+     * VariableStatement
+     *      : 'let' VariableDeclarationList ';'
+     *      ;
+     */
+    VariableStatement() {
+        this._eat('let')
+        const declarations = this.VariableDeclarationList()
+        this._eat(';')
+        return factory.VariableStatement(declarations)
+    }
+
+    /**
+     * VariableDeclarationList
+     * VariableDeclarationList ',' VariableDeclaration
+     */
+    VariableDeclarationList() {
+        const declarations = []
+
+        do {
+            declarations.push(this.VariableDeclaration())
+        } while (this._lookahead.type === ',' && this._eat(','))
+
+        return declarations
+    }
+
+    /**
+     * VariableDeclaration
+     * : Identifier OptVariableInitializer
+     * ;
+     */
+    VariableDeclaration() {
+        const id = this.Identifier()
+
+        const init = this._lookahead.type != ',' && this._lookahead.type != ';'
+            ? this.VariableInitializer() : null
+
+        return factory.VariableDeclarator(id, init)
+    }
+
+    /**
+     * VariableInitializer
+     * : SIMPLE_ASSIGN AssignmentExpression
+     * ;
+     */
+    VariableInitializer() {
+        this._eat('SIMPLE_ASSIGN')
+        return this.AssignmentExpression()
     }
 
     /**
