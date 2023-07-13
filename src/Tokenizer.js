@@ -14,17 +14,23 @@ const Spec = [
 	// Whitespace
 	[/^\s+/, null],
 
-	// ---------------------------------------
 	// Symbols, delimiters
 	[/^;/, ';'],
 	[/^\{/, '{'],
 	[/^\}/, '}'],
 	[/^\(/, '('],
 	[/^\)/, ')'],
-	
 
 	// Numbers
 	[/^\d+/, 'NUMBER'],
+
+	// Identifiers
+	[/^\w+/, 'IDENTIFIER'],
+
+	// Assignment operators ->
+	// =, *=, /=, +=. -=
+	[/^=/, 'SIMPLE_ASSIGN'],
+	[/^[\*\/\+\-]=/, 'COMPLEX_ASSIGN'],
 
 	// Strings
 	[/^"[^"]*"/, 'STRING'],
