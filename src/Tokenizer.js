@@ -24,6 +24,8 @@ const Spec = [
 
 	// Keywords
 	[/^\blet\b/, 'let'],
+	[/^\bif\b/, 'if'],
+	[/^\belse\b/, 'else'],
 
 
 	// Numbers
@@ -44,6 +46,7 @@ const Spec = [
 	// operators +, -, *, /
 	[/^[+\-]/, 'ADDITIVE_OPERATOR'],
 	[/^[*\/]/, 'MULTIPLICATIVE_OPERATOR'],
+	[/^[><]=?/, 'RELATIONAL_OPERATOR'],
 ]
 
 class Tokenizer {

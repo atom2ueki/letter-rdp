@@ -50,6 +50,15 @@ const DefaultFactory = {
         }
     },
 
+    IfStatement(test, consequent, alternate) {
+        return {
+            type: 'IfStatement',
+            test: test,
+            consequent: consequent,
+            alternate: alternate
+        }
+    },
+
     StringLiteral(value) {
         return {
             type: 'StringLiteral',
@@ -147,12 +156,16 @@ class Parser {
      *      : ExpressionStatement
      *      | BlockStatement
      *      | EmptyStatement
+     *      | VariableStatement
+     *      | IfStatement
      *      ;
      */
     Statement() {
         switch (this._lookahead.type) {
         case ';':
             return this.EmptyStatement()
+        case 'if':
+            return this.IfStatement()
         case '{': 
             return this.BlockStatement()
         case 'let':
@@ -198,7 +211,8 @@ class Parser {
      *      ;
      */
     AssignmentExpression() {
-        const left = this.AdditiveExpression()
+        // lowest priority
+        const left = this.RelationalExpression()
 
         if (!this._isAssignmentOperator(this._lookahead.type)) {
             return left
@@ -280,6 +294,25 @@ class Parser {
     }
 
     /**
+     * RELATIONAL_OPERATOR: >, >=, <, <=
+     * x > y
+     * x >= y
+     * x < y
+     * x <= y
+     * 
+     * RelationalExpression
+     *      : AdditiveExpression
+     *      | MultiplicativeExpression MULTIPLICATIVE_OPERATOR Literal
+     *      ;
+     */
+    RelationalExpression() {
+        return this._BinaryExpression(
+            'AdditiveExpression',
+            'RELATIONAL_OPERATOR'
+        )
+    }
+
+    /**
      * Generic binary expression
      */
     _BinaryExpression(builderName, operatorToken) {
@@ -345,6 +378,26 @@ class Parser {
         this._eat('}')
 
         return factory.BlockStatement(body)
+    }
+
+    /**
+     * IfStatement
+     *      : 'if' '(' Expression ')' Statement
+     *      | 'if' '(' Expression ')' Statement 'else' Statement
+     *      ; 
+     */
+    IfStatement() {
+        this._eat('if')
+        this._eat('(')
+        const test = this.Expression()
+        this._eat(')')
+
+        // get consequent from block
+        const consequent = this.Statement()
+        // this is an opt statement=
+        const alternate = this._lookahead != null && this._lookahead.type === 'else'
+            ? this._eat('else') && this.Statement() : null
+        return factory.IfStatement(test, consequent, alternate)
     }
 
     /**
