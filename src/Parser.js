@@ -73,6 +73,20 @@ const DefaultFactory = {
         }
     },
 
+    BooleanLiteral(value) {
+        return {
+            type: 'BooleanLiteral',
+            value: value
+        }
+    },
+
+    NullLiteral() {
+        return {
+            type: 'NullLiteral',
+            value: null
+        }
+    },
+
     Identifier(name) {
         return {
             type: 'Identifier',
@@ -92,6 +106,15 @@ const DefaultFactory = {
     AssignmentExpression(operator, left, right) {
         return {
             type: 'AssignmentExpression',
+            operator: operator,
+            left: left,
+            right: right
+        }
+    },
+
+    LogicalExpression(operator, left, right) {
+        return {
+            type: 'LogicalExpression',
             operator: operator,
             left: left,
             right: right
@@ -212,7 +235,7 @@ class Parser {
      */
     AssignmentExpression() {
         // lowest priority
-        const left = this.RelationalExpression()
+        const left = this.LogicalORExpression()
 
         if (!this._isAssignmentOperator(this._lookahead.type)) {
             return left
@@ -268,6 +291,38 @@ class Parser {
     }
 
     /**
+     * Logical AND Expression
+     * 
+     *  x && y
+     * 
+     *  LogicalANDExpression
+     *      : EqualityExpression LOGICAL_AND LogicalANDExpression
+     *      | EqualityExpression
+     *      ;
+     */
+    LogicalANDExpression() {
+        return this._LogicalExpression(
+            'EqualityExpression', 
+            'LOGICAL_AND')
+    }
+
+    /**
+     * Logical OR Expression
+     * 
+     *  x || y
+     * 
+     *  LogicalANDExpression
+     *      : EqualityExpression LOGICAL_OR LogicalORExpression
+     *      | EqualityExpression
+     *      ;
+     */
+    LogicalORExpression() {
+        return this._LogicalExpression(
+            'LogicalANDExpression',
+            'LOGICAL_OR')
+    }
+
+    /**
      * AdditiveExpression
      *      : Literal
      *      | AdditiveExpression ADDITIVE_OPERATOR Literal
@@ -313,6 +368,38 @@ class Parser {
     }
 
     /**
+     * EQUALITY_OPERATOR: ==, !=
+     * x == y
+     * x != y
+     * 
+     * EqualityExpression
+     *      : RelationalExpression EQUALITY_OPERATOR EqualityExpression
+     *      | RelationalExpression
+     *      ;
+     */
+    EqualityExpression() {
+        return this._BinaryExpression(
+            'RelationalExpression',
+            'EQUALITY_OPERATOR'
+        )
+    }
+
+    /**
+     * Generic logical expression
+     */
+    _LogicalExpression(builderName, operatorToken) {
+        let left = this[builderName]();
+
+        while (this._lookahead.type === operatorToken) {
+            const operator = this._eat(operatorToken).value
+            const right = this[builderName]()
+            left = factory.LogicalExpression(operator, left, right)
+        }
+
+        return left
+    }
+
+    /**
      * Generic binary expression
      */
     _BinaryExpression(builderName, operatorToken) {
@@ -350,7 +437,13 @@ class Parser {
      * Whether the token is a valid literal
      */
     _isLiteral(tokenType) {
-        return tokenType === 'NUMBER' || tokenType === 'STRING'
+        return (
+            tokenType === 'NUMBER' ||
+            tokenType === 'STRING' ||
+            tokenType === 'true' ||
+            tokenType === 'false' ||
+            tokenType === 'null'
+        )
     }
 
     /**
@@ -454,6 +547,8 @@ class Parser {
      * Literal
      *  : NumericLiteral
      *  | StringLiteral
+     *  | BooleanLiteral
+     *  | NullLiteral
      * ;
      */
     Literal() {
@@ -462,6 +557,12 @@ class Parser {
             return this.NumericLiteral()
         case 'STRING':
             return this.StringLiteral()
+        case 'true':
+            return this.BooleanLiteral(true)
+        case 'false':
+            return this.BooleanLiteral(false)
+        case 'null':
+            return this.NullLiteral(false)
         }
 
         throw new SyntaxError(`Literal: Unexpected literal production`)
@@ -486,6 +587,26 @@ class Parser {
     NumericLiteral() {
         const token = this._eat('NUMBER')
         return factory.NumericLiteral(Number(token.value))
+    }
+
+    /**
+     * BooleanLiteral
+     *     : BOOLEAN
+     *     ;
+     */
+    BooleanLiteral(value) {
+        this._eat(value ? 'true' : 'false')
+        return factory.BooleanLiteral(value)
+    }
+
+    /**
+     * NullLiteral
+     *     : Null
+     *     ;
+     */
+    NullLiteral() {
+        this._eat('null')
+        return factory.NullLiteral()
     }
 
     _eat(tokenType) {

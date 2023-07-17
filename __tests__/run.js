@@ -17,7 +17,9 @@ const tests = [
     require('./assignment-test.js'),
     require('./variable-test.js'),
     require('./if-test.js'),
-    require('./relational-test.js')
+    require('./relational-test.js'),
+    require('./equality-test.js'),
+    require('./logical-test.js')
 ]
 
 const parser = new Parser()
@@ -27,11 +29,7 @@ const parser = new Parser()
  */
 function exec() {
     const program = `
-        let x = 30;
-        let y = 42;
-        if (x + 5 <= y * 2) {
-
-        }
+    x > 5 && y < 10;
     `
     const ast = parser.parse(program)
 
