@@ -119,6 +119,14 @@ const DefaultFactory = {
             left: left,
             right: right
         }
+    },
+
+    UnaryExpression(operator, argument) {
+        return {
+            type: 'UnaryExpression',
+            operator: operator,
+            argument: argument
+        }
     }
 }
 
@@ -254,7 +262,7 @@ class Parser {
      *      ;
      */
     LeftHandSideExpression() {
-        return this.Identifier()
+        return this.PrimaryExpression()
     }
 
     /**
@@ -337,13 +345,13 @@ class Parser {
 
     /**
      * MultiplicativeExpression
-     *      : PrimaryExpression
-     *      | MultiplicativeExpression MULTIPLICATIVE_OPERATOR Literal
+     *      : UnaryExpression
+     *      | MultiplicativeExpression MULTIPLICATIVE_OPERATOR UnaryExpression
      *      ;
      */
     MultiplicativeExpression() {
         return this._BinaryExpression(
-            'PrimaryExpression',
+            'UnaryExpression',
             'MULTIPLICATIVE_OPERATOR'
         )
     }
@@ -415,10 +423,33 @@ class Parser {
     }
 
     /**
+     * UnaryExpression
+     *      : LeftHandSideExpression
+     *      | ADDITIVE_OPERATOR UnaryExpression
+     *      | LOGICAL_NOT UnaryExpression
+     *      ;
+     */
+    UnaryExpression() {
+        let operator
+        switch (this._lookahead.type) {
+            case 'ADDITIVE_OPERATOR':
+                operator = this._eat('ADDITIVE_OPERATOR').value
+                break
+            case 'LOGICAL_NOT':
+                operator = this._eat('LOGICAL_NOT').value
+                break
+        }
+        if (operator != null) {
+            return factory.UnaryExpression(operator, this.UnaryExpression())
+        }
+        return this.LeftHandSideExpression()
+    }
+
+    /**
      * PrimaryExpression
      *      : Literal
      *      | ParenthesizedExpression
-     *      | LeftHandSideExpression
+     *      | Identifier
      *      ;
      */
     PrimaryExpression() {
@@ -428,6 +459,8 @@ class Parser {
         switch (this._lookahead.type) {
             case '(':
                 return this.ParenthesizedExpression()
+            case 'IDENTIFIER':
+                return this.Identifier()
             default:
                 return this.LeftHandSideExpression()
         }
