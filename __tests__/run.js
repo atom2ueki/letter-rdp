@@ -20,7 +20,10 @@ const tests = [
     require('./relational-test.js'),
     require('./equality-test.js'),
     require('./logical-test.js'),
-    require('./unary-test.js')
+    require('./unary-test.js'),
+    require('./while-test.js'),
+    require('./do-while-test.js'),
+    require('./for-test.js')
 ]
 
 const parser = new Parser()
@@ -30,7 +33,9 @@ const parser = new Parser()
  */
 function exec() {
     const program = `
-    -x * -10;
+    for(let i=0; i<10; i+=1) {
+        x+=i;
+    }
     `
     const ast = parser.parse(program)
 
