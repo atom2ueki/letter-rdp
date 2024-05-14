@@ -162,6 +162,14 @@ const DefaultFactory = {
             property: property,
             computed: computed
         }
+    },
+
+    CallExpression(callee, args) {
+        return {
+            type: 'CallExpression',
+            callee,
+            arguments: args
+        }
     }
 }
 
@@ -302,7 +310,7 @@ class Parser {
      *      ;
      */
     LeftHandSideExpression() {
-        return this.MemberExpression()
+        return this.CallMemberExpression()
     }
 
     /**
@@ -330,6 +338,77 @@ class Parser {
         }
 
         return object
+    }
+
+    /**
+     * CallMemberExpression
+     *    : MemberExpression
+     *   | CallMemberExpression '(' ')' // call expression
+     *  | CallMemberExpression '(' ArgumentList ')' // call expression
+     * ;
+     */
+    CallMemberExpression() {
+        let member = this.MemberExpression()
+
+        if (this._lookahead.type === '(') {
+            return this._CallExpression(member)
+        }
+
+        return member
+    }
+
+    /**
+     * Generic call expression helper
+     * 
+     * CallExpression
+     *  : Callee Arguments
+     *  ;
+     * 
+     * Callee
+     *  : MemberExpression
+     *  | CallExpression
+     *  ;
+     */
+    _CallExpression(callee) {
+        let callExpression = factory.CallExpression(callee, this.Arguments())
+
+        if (this._lookahead.type === '(') {
+            callExpression = this._CallExpression(callExpression)
+        }
+
+        return callExpression
+    }
+
+    /**
+     * Arguments
+     * : '(' ')'
+     * | '(' ArgumentList ')'
+     * ;
+     */
+    Arguments() {
+        this._eat('(')
+
+        const args = this._lookahead.type !== ')' ? this.ArgumentList() : []
+
+        this._eat(')')
+
+        return args
+    }
+
+    /**
+     * ArgumentList
+     *     : AssignmentExpression
+     *    | ArgumentList ',' AssignmentExpression
+     *   ;
+     */
+    ArgumentList() {
+        const args = []
+        
+        do {
+            args.push(this.AssignmentExpression())
+        } while (this._lookahead.type === ',' && this._eat(','))
+
+        return args
     }
 
     /**

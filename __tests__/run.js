@@ -24,7 +24,8 @@ const tests = [
     require('./while-test.js'),
     require('./do-while-test.js'),
     require('./for-test.js'),
-    require('./member-test.js')
+    require('./member-test.js'),
+    require('./call-test.js')
 ]
 
 const parser = new Parser()
@@ -38,9 +39,13 @@ function exec() {
         let i = 0;
 
         while (i < s.length) {
-            s[i];
+            console.log(s[i]);
             i += 1;
         }
+        
+        square(2);
+
+        getCallback();
     `
     const ast = parser.parse(program)
 
