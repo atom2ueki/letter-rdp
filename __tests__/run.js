@@ -23,7 +23,8 @@ const tests = [
     require('./unary-test.js'),
     require('./while-test.js'),
     require('./do-while-test.js'),
-    require('./for-test.js')
+    require('./for-test.js'),
+    require('./member-test.js')
 ]
 
 const parser = new Parser()
@@ -33,9 +34,13 @@ const parser = new Parser()
  */
 function exec() {
     const program = `
-    for(let i=0; i<10; i+=1) {
-        x+=i;
-    }
+        let s = "Hello, World!";
+        let i = 0;
+
+        while (i < s.length) {
+            s[i];
+            i += 1;
+        }
     `
     const ast = parser.parse(program)
 

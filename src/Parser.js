@@ -153,6 +153,15 @@ const DefaultFactory = {
             operator: operator,
             argument: argument
         }
+    },
+
+    MemberExpression(object, property, computed) {
+        return {
+            type: 'MemberExpression',
+            object: object,
+            property: property,
+            computed: computed
+        }
     }
 }
 
@@ -289,11 +298,38 @@ class Parser {
 
     /**
      * LeftHandSideExpression
-     *      : Identifier
+     *      : MemberExpression
      *      ;
      */
     LeftHandSideExpression() {
-        return this.PrimaryExpression()
+        return this.MemberExpression()
+    }
+
+    /**
+     * MemberExpression
+     *     : PrimaryExpression
+     *    | MemberExpression '.' Identifier
+     *    | MemberExpression '[' Expression ']'
+     *    ;
+     */
+    MemberExpression() {
+        let object = this.PrimaryExpression();
+
+        while (this._lookahead.type === '.' || this._lookahead.type === '[') {
+            // non computed member expression
+            if (this._lookahead.type === '.') {
+                this._eat('.')
+                const property = this.Identifier()
+                object = factory.MemberExpression(object, property, false)
+            } else {
+                this._eat('[')
+                const property = this.Expression()
+                this._eat(']')
+                object = factory.MemberExpression(object, property, true)
+            }
+        }
+
+        return object
     }
 
     /**
@@ -306,7 +342,7 @@ class Parser {
     }
 
     _checkValidAssignmentTarget(node) {
-        if (node.type === 'Identifier') {
+        if (node.type === 'Identifier' || node.type === 'MemberExpression') {
            return node 
         }
         throw new SyntaxError('Invalid left hand side with assignment expression')
