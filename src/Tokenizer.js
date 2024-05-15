@@ -35,7 +35,7 @@ const Spec = [
 	[/^\bwhile\b/, 'while'],
 	[/^\bdo\b/, 'do'],
 	[/^\bfor\b/, 'for'],
-	[/^\bdef\b/, 'def'],
+	[/^\bfunc\b/, 'func'],
 	[/^\breturn\b/, 'return'],
 	[/^\bclass\b/, 'class'],
 	[/^\bthis\b/, 'this'],

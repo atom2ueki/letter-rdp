@@ -293,7 +293,7 @@ class Parser {
             return this.BlockStatement()
         case 'let':
             return this.VariableStatement()
-        case 'def':
+        case 'func':
             return this.FunctionDeclaration()
         case 'return':
             return this.ReturnStatement()
@@ -310,11 +310,11 @@ class Parser {
 
     /**
      * FunctionDeclaration
-     * 'def' Identifier '(' OptFormalParameterList ')' BlockStatement
+     * 'func' Identifier '(' OptFormalParameterList ')' BlockStatement
      * ;
      */
     FunctionDeclaration() {
-        this._eat('def')
+        this._eat('func')
         const name = this.Identifier()
         this._eat('(')
         const params = this._lookahead.type !== ')' ? this.FormalParameterList() : []

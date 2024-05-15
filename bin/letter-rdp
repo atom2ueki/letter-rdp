@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const { Parser } = require('../src/Parser')
+
+const fs = require('fs')
+
+function main(argv) {
+    const [_node, _path, mode, exp] = argv
+
+    const parser = new Parser()
+
+    let ast = null
+
+    if (mode === '-e') {
+        ast = parser.parse(exp)
+    } else if (mode === '-f') {
+        const content = fs.readFileSync(exp, 'utf8')
+        ast = parser.parse(content)
+    } else {
+        console.error('Invalid mode')
+        process.exit(1)
+    }
+
+    console.log(JSON.stringify(ast, null, 2))
+}
+
+main(process.argv)

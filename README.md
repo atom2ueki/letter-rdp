@@ -13,9 +13,15 @@ The parser now writen with javascript, but you can rewrite it with any languages
 e.g. swift use c++ write it's own parser under
 https://github.com/apple/swift/blob/main/lib/Parse/Parser.cpp
 
-lets run it ->
+execute it with file ->
 ```
-node __tests__/run.js
+.bin/letter-rdp -f example.tl
+```
+
+or with `-e`
+
+```
+./bin/letter-rdp -e 'let x=10; console.log(x);'
 ```
 
 ### Unit Test

@@ -4,12 +4,12 @@ module.exports = test => {
     test(
         `
         class Point {
-            def constructor(x, y) {
+            func constructor(x, y) {
                 this.x = x;
                 this.y = y;
             }
 
-            def move(x, y) {
+            func move(x, y) {
                 this.x = x;
                 this.y = y;
             }
@@ -169,12 +169,12 @@ module.exports = test => {
     test(
       `
         class Circle extends Point {
-            def constructor(x, y, radius) {
+            func constructor(x, y, radius) {
                 super(x, y);
                 this.radius = radius;
             }
 
-            def area() {
+            func area() {
                 return 3.14 * this.radius * this.radius;
             }
         }
