@@ -170,6 +170,51 @@ const DefaultFactory = {
             callee,
             arguments: args
         }
+    },
+
+    ClassDeclaration(id, superClass, body) {
+        return {
+            type: 'ClassDeclaration',
+            id: id,
+            superClass: superClass,
+            body: body
+        }
+    },
+
+    ThisExpression() {
+        return {
+            type: 'ThisExpression'
+        }
+    },
+
+    Super() {
+        return {
+            type: 'Super'
+        }
+    },
+
+    NewExpression(callee, args) {
+        return {
+            type: 'NewExpression',
+            callee: callee,
+            arguments: args
+        }
+    },
+
+    FunctionDeclaration(name, params, body) {
+        return {
+            type: 'FunctionDeclaration',
+            name: name,
+            params: params,
+            body: body
+        }
+    },
+
+    ReturnStatement(argument) {
+        return {
+            type: 'ReturnStatement',
+            argument: argument
+        }
     }
 }
 
@@ -227,13 +272,16 @@ class Parser {
 
     /**
      * Statement
-     *      : ExpressionStatement
-     *      | BlockStatement
-     *      | EmptyStatement
-     *      | VariableStatement
-     *      | IfStatement
-     *      | IterationStatement
-     *      ;
+     *     : ExpressionStatement
+     *     | BlockStatement
+     *     | EmptyStatement
+     *     | VariableStatement
+     *     | IfStatement
+     *     | IterationStatement
+     *     | FunctionDeclaration
+     *     | ReturnStatement
+     *     | ClassDeclaration
+     *     ;
      */
     Statement() {
         switch (this._lookahead.type) {
@@ -245,6 +293,12 @@ class Parser {
             return this.BlockStatement()
         case 'let':
             return this.VariableStatement()
+        case 'def':
+            return this.FunctionDeclaration()
+        case 'return':
+            return this.ReturnStatement()
+        case 'class':
+            return this.ClassDeclaration()
         case 'while':
         case 'do':
         case 'for':
@@ -252,6 +306,74 @@ class Parser {
         default:
             return this.ExpressionStatement()
         }
+    }
+
+    /**
+     * FunctionDeclaration
+     * 'def' Identifier '(' OptFormalParameterList ')' BlockStatement
+     * ;
+     */
+    FunctionDeclaration() {
+        this._eat('def')
+        const name = this.Identifier()
+        this._eat('(')
+        const params = this._lookahead.type !== ')' ? this.FormalParameterList() : []
+        this._eat(')')
+        const body = this.BlockStatement()
+        return factory.FunctionDeclaration(name, params, body)
+    }
+    
+    /**
+     * FormalParameterList
+     *   : Identifier
+     *  | Opt FormalParameterList ',' Identifier
+     * ;
+     */
+    FormalParameterList() {
+        const params = []
+        do {
+            params.push(this.Identifier())
+        } while (this._lookahead.type === ',' && this._eat(','))
+        return params
+    }
+
+    /**
+     * ReturnStatement
+     * 'return' OptExpression ';'
+     * ;
+     */
+    ReturnStatement() {
+        this._eat('return')
+        const argument = this._lookahead.type !== ';' ? this.Expression() : null
+        this._eat(';')
+        return factory.ReturnStatement(argument)
+    }
+
+    /**
+     * ClassDeclaration
+     * 'class' Identifier OptClassExtends BlockStatement
+     * ;
+     */
+    ClassDeclaration() {
+        this._eat('class')
+        
+        const id = this.Identifier()
+
+        const superClass = this._lookahead.type === 'extends' ? this.ClassExtends() : null
+
+        const body = this.BlockStatement()
+
+        return factory.ClassDeclaration(id, superClass, body)
+    }
+
+    /**
+     * ClassExtends
+     * : 'extends' Identifier
+     * ;
+     */
+    ClassExtends() {
+        this._eat('extends')
+        return this.Identifier()
     }
 
     /**
@@ -348,6 +470,11 @@ class Parser {
      * ;
      */
     CallMemberExpression() {
+        // Super call:
+        if (this._lookahead.type === 'super') {
+            return this._CallExpression(this.Super())
+        }
+
         let member = this.MemberExpression()
 
         if (this._lookahead.type === '(') {
@@ -596,6 +723,8 @@ class Parser {
      *      : Literal
      *      | ParenthesizedExpression
      *      | Identifier
+     *      | ThisExpression
+     *      | NewExpression
      *      ;
      */
     PrimaryExpression() {
@@ -607,8 +736,12 @@ class Parser {
                 return this.ParenthesizedExpression()
             case 'IDENTIFIER':
                 return this.Identifier()
+            case 'this':
+                return this.ThisExpression()
+            case 'new':
+                return this.NewExpression()
             default:
-                return this.LeftHandSideExpression()
+                SyntaxError(`Unexpected token: ${this._lookahead.type}`)
         }
     }
 
@@ -623,6 +756,36 @@ class Parser {
             tokenType === 'false' ||
             tokenType === 'null'
         )
+    }
+
+    /**
+     * NewExpression
+     * : 'new' any CallMemberExpression -> e.g. new MyNamespace.MyClass(1, 2)
+     * ;
+     */
+    NewExpression() {
+        this._eat('new')
+        return factory.NewExpression(this.MemberExpression(), this.Arguments())
+    }
+
+    /**
+     * ThisExpression
+     * : 'this'
+     * ;
+     */
+    ThisExpression() {
+        this._eat('this')
+        return factory.ThisExpression()
+    }
+
+    /**
+     * Super
+     * : 'super'
+     * ;
+     */
+    Super() {
+        this._eat('super')
+        return factory.Super()
     }
 
     /**

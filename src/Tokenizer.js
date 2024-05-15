@@ -35,6 +35,13 @@ const Spec = [
 	[/^\bwhile\b/, 'while'],
 	[/^\bdo\b/, 'do'],
 	[/^\bfor\b/, 'for'],
+	[/^\bdef\b/, 'def'],
+	[/^\breturn\b/, 'return'],
+	[/^\bclass\b/, 'class'],
+	[/^\bthis\b/, 'this'],
+	[/^\bnew\b/, 'new'],
+	[/^\bextends\b/, 'extends'],
+	[/^\bsuper\b/, 'super'],
 
 	// Numbers including integers and floats, together name it as NUMBER
 	[/^\d+(\.\d+)?/, 'NUMBER'],
