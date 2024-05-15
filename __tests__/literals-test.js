@@ -13,6 +13,20 @@ module.exports = test => {
 		]
 	})
 
+	// NumericLiteral with float point
+	test('3.14;', {
+		type: 'Program',
+		body: [
+			{
+				type: 'ExpressionStatement',
+				expression: {
+					type: 'NumericLiteral',
+					value: 3.14
+				}
+			}
+		]
+	})
+
 	// StringLiteral
 	test(`"test";`, {
 		type: 'Program',

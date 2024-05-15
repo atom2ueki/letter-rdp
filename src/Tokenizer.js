@@ -36,9 +36,8 @@ const Spec = [
 	[/^\bdo\b/, 'do'],
 	[/^\bfor\b/, 'for'],
 
-
-	// Numbers
-	[/^\d+/, 'NUMBER'],
+	// Numbers including integers and floats, together name it as NUMBER
+	[/^\d+(\.\d+)?/, 'NUMBER'],
 
 	// Identifiers
 	[/^\w+/, 'IDENTIFIER'],
